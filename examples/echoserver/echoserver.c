@@ -37,6 +37,7 @@
 #include <wolfssl/wolfcrypt/asn.h>
 #include <wolfssl/wolfcrypt/asn_public.h>
 #include <wolfssl/wolfcrypt/error-crypt.h>
+#include <wolfssl/wolfcrypt/logging.h>
 #include <wolfssh/ssh.h>
 #include <wolfssh/internal.h>
 #include <wolfssh/wolfsftp.h>
@@ -2853,8 +2854,6 @@ THREAD_RETURN WOLFSSH_THREAD echoserver_test(void* args)
 
 #endif /* NO_WOLFSSH_SERVER */
 
-
-void wolfSSL_Debugging_ON(void);
 
 int wolfSSH_Echoserver(int argc, char** argv)
 {

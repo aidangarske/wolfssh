@@ -87,6 +87,7 @@ AC_ARG_WITH(wolfssl,
 )
 
 AC_CHECK_LIB([wolfssl],[wolfCrypt_Init],,[AC_MSG_ERROR([libwolfssl is required for ${PACKAGE}. It can be obtained from https://www.wolfssl.com/download.html/ .])])
+AC_CHECK_LIB([wolftpm],[wolfTPM2_Init],,[AC_MSG_ERROR([libwolftpm is required for ${PACKAGE}. It can be obtained from https://www.wolfssl.com/download.html/ .])])
 AC_CHECK_FUNCS([gethostbyname getaddrinfo gettimeofday inet_ntoa memset socket wc_ecc_set_rng])
 AC_CHECK_DECLS([[pread],[pwrite]],,[unistd.h])
 
@@ -171,6 +172,11 @@ AC_ARG_ENABLE([certs],
     [AS_HELP_STRING([--enable-certs],[Enable X.509 cert support (default: disabled)])],
     [ENABLED_CERTS=$enableval],[ENABLED_CERTS=no])
 
+# TPM 2.0 Support
+AC_ARG_ENABLE([tpm],
+    [AS_HELP_STRING([--enable-tpm],[Enable TPM 2.0 support (default: disabled)])],
+    [ENABLED_TPM=$enableval],[ENABLED_TPM=no])
+
 # smallstack
 AC_ARG_ENABLE([smallstack],
     [AS_HELP_STRING([--enable-smallstack],[Enable small stack (default: disabled)])],
@@ -225,6 +231,10 @@ AS_IF([test "x$ENABLED_SSHD" = "xyes"],
       [AM_CPPFLAGS="$AM_CPPFLAGS -DWOLFSSH_SSHD"])
 AS_IF([test "x$ENABLED_SSHCLIENT" = "xyes"],
       [AM_CPPFLAGS="$AM_CPPFLAGS -DWOLFSSH_SSHCLIENT"])
+AS_IF([test "x$ENABLED_TPM" = "xyes"],
+      [AM_CPPFLAGS="$AM_CPPFLAGS -DWOLFSSH_TPM"])
+AS_IF([test "x$ENABLED_SMALLSTACK" = "xyes"],
+      [AM_CPPFLAGS="$AM_CPPFLAGS -DWOLFSSH_SMALL_STACK"])
 
 if test "$ENABLED_SSHD" = "yes"; then
     if test -n "$PAM_LIB"
@@ -279,6 +289,7 @@ AM_CONDITIONAL([BUILD_AGENT],[test "x$ENABLED_AGENT" = "xyes"])
 AM_CONDITIONAL([BUILD_SSHD],[test "x$ENABLED_SSHD" = "xyes"])
 AM_CONDITIONAL([BUILD_SSHCLIENT],[test "x$ENABLED_SSHCLIENT" = "xyes"])
 AM_CONDITIONAL([BUILD_CERTS],[test "x$ENABLED_CERTS" = "xyes"])
+AM_CONDITIONAL([BUILD_TPM],[test "x$ENABLED_TPM" = "xyes"])
 
 AX_HARDEN_CC_COMPILER_FLAGS
 
@@ -322,6 +333,7 @@ AS_ECHO(["   * sftp:                      $ENABLED_SFTP"])
 AS_ECHO(["   * sshd:                      $ENABLED_SSHD"])
 AS_ECHO(["   * ssh client:                $ENABLED_SSHCLIENT"])
 AS_ECHO(["   * agent:                     $ENABLED_AGENT"])
+AS_ECHO(["   * TPM 2.0 support:           $ENABLED_TPM"])
 AS_ECHO(["   * TCP/IP Forwarding:         $ENABLED_FWD"])
 AS_ECHO(["   * X.509 Certs:               $ENABLED_CERTS"])
 AS_ECHO(["   * Examples:                  $ENABLED_EXAMPLES"])

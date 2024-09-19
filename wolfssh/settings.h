@@ -46,7 +46,6 @@
 extern "C" {
 #endif
 
-
 /* user settings here */
 #ifndef WMALLOC_USER
     #define USE_WOLFSSH_MEMORY  /* default memory handlers */

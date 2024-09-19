@@ -74,6 +74,10 @@
     #include <wolfssl/wolfcrypt/asn.h>
 #endif
 
+#ifdef WOLFSSH_TPM
+    #include <wolftpm/tpm2_wrap.h>
+    #include "../tpm/tpm_io.h"
+#endif /* WOLFSSH_TPM */
 
 #ifndef NO_WOLFSSH_CLIENT
 
@@ -650,6 +654,10 @@ THREAD_RETURN WOLFSSH_THREAD client_test(void* args)
     byte useAgent = 0;
     WS_AgentCbActionCtx agentCbCtx;
 #endif
+#ifdef WOLFSSH_TPM
+    WOLFTPM2_DEV tpmDev;
+    WOLFTPM2_KEY tpmKey;
+#endif
 
     int     argc = ((func_args*)args)->argc;
     char**  argv = ((func_args*)args)->argv;
@@ -833,6 +841,15 @@ THREAD_RETURN WOLFSSH_THREAD client_test(void* args)
     ssh = wolfSSH_new(ctx);
     if (ssh == NULL)
         err_sys("Couldn't create wolfSSH session.");
+
+#ifdef WOLFSSH_TPM
+    /* Link the TPM 2.0 device to the SSH session
+     * This way, SSH client operations that can
+     * take advantage of the hardware security
+     * will have access to the TPM 2.0 device */
+    wolfSSH_SetTpmDev(ssh, &tpmDev);
+    wolfSSH_SetTpmKey(ssh, &tpmKey);
+#endif
 
 #if defined(WOLFSSL_PTHREADS) && defined(WOLFSSL_TEST_GLOBAL_REQ)
     wolfSSH_SetGlobalReq(ctx, callbackGlobalReq);

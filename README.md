@@ -34,12 +34,26 @@ Additional build options for wolfSSL are located in
 [chapter two](https://www.wolfssl.com/docs/wolfssl-manual/ch2/).
 of the wolfSSH manual.
 
+TPM dependencies
+----------------
+
+When using TPM for client side public key authentication you'll need to build
+and have wolfTPM downloaded and configured to operate with wolfSSH.
+[wolfTPM](https://www.wolfssl.com/products/wolftpm/)
+wolfTPM build configuration and steps:
+
+    $ cd wolfTPM
+    $ ./autogen.sh (if cloned from GitHub)
+    $ ./configure --enable-swtpm
+    $ make
+    $ make check
+
 building
 --------
 
 From the wolfSSH source directory run:
 
-    $ ./autogen.sh
+    $ ./autogen.sh (if cloned from GitHub)
     $ ./configure --with-wolfssl=[/usr/local]
     $ make
     $ make check
@@ -528,6 +542,32 @@ fred-cert.der would be:
 
     $ ./examples/client/client -u fred -J ./keys/fred-cert.der -i ./keys/fred-key.der
 
+TPM
+===
+
+wolfSSH now supports TPM support with client key authentication. For testing TPM
+with private rsa key you'll need to run the server from the simulator `ibmswtpm2`
+repository like so:
+
+    $ ./tpm_server
+
+Before echoserver need to run keyblob:
+
+    $ ./examples/keygen/keygen keyblob.bin -rsa
+
+The directory `examples` contains an echoserver that any client should
+be able to connect to. From wolfSSH open two terminal instances and run the
+server:
+
+    $ ./examples/echoserver/echoserver -f
+
+The option `-f` enables echo-only mode. From another terminal run the
+client:
+
+    $ ./examples/client/client
+
+and debug for example use r -i ../wolfTPM/keyblob.bin to run and debug
+wolfTPM support
 
 WOLFSSH APPLICATIONS
 ====================
