@@ -854,9 +854,12 @@ static int wolfSSH_TPM_InitKey(WOLFTPM2_DEV* dev, const char* name, WOLFTPM2_KEY
     return WOLFSSH_TPM_SUCCESS;
 }
 
-
-static void wolfSSH_TPM_Cleanup(WOLFTPM2_DEV* dev)
+static void wolfSSH_TPM_Cleanup(WOLFTPM2_DEV* dev, WOLFTPM2_KEY* key)
 {
+    if (key != NULL) {
+        wolfTPM2_UnloadHandle(dev, &key->handle);
+    }
+
     if (dev != NULL) {
         wolfTPM2_Cleanup(dev);
     }

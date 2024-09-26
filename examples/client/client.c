@@ -127,7 +127,9 @@ static void ShowUsage(void)
 
 
 static const char* pubKeyName = NULL;
-static const char* certName = NULL;
+#ifdef WOLFSSH_CERTS
+    static const char* certName = NULL;
+#endif
 static const char* caCert   = NULL;
 
 
@@ -784,9 +786,15 @@ THREAD_RETURN WOLFSSH_THREAD client_test(void* args)
         err_sys("Threading needed for terminal session\n");
 #endif
 #ifndef WOLFSSH_TPM
+    #ifdef WOLFSSH_CERTS
     if ((pubKeyName == NULL && certName == NULL) && privKeyName != NULL) {
         err_sys("If setting priv key, need pub key.");
     }
+    #else
+     if (pubKeyName == NULL && privKeyName != NULL) {
+        err_sys("If setting priv key, need pub key.");
+    }
+    #endif
 #endif
     ret = ClientSetPrivateKey(privKeyName, userEcc, NULL);
     if (ret != 0) {
