@@ -783,11 +783,11 @@ THREAD_RETURN WOLFSSH_THREAD client_test(void* args)
     if (keepOpen)
         err_sys("Threading needed for terminal session\n");
 #endif
-
+#ifndef WOLFSSH_TPM
     if ((pubKeyName == NULL && certName == NULL) && privKeyName != NULL) {
         err_sys("If setting priv key, need pub key.");
     }
-
+#endif
     ret = ClientSetPrivateKey(privKeyName, userEcc, NULL);
     if (ret != 0) {
         err_sys("Error setting private key");
