@@ -546,12 +546,14 @@ TPM
 ===
 
 wolfSSH now supports TPM support with client key authentication. For testing TPM
-with private rsa key you'll need to run the server from the simulator `ibmswtpm2`
-repository like so:
+with private rsa key you'll need to run the server from the TPM simulator
+`ibmswtpm2` repository like so:
 
+    $ cd src
     $ ./tpm_server
 
-Before echoserver need to run keyblob:
+Before starting the echoserver you need to run the keygen for keyblob in wolfTPM
+using:
 
     $ ./examples/keygen/keygen keyblob.bin -rsa
 
@@ -561,13 +563,20 @@ server:
 
     $ ./examples/echoserver/echoserver -f
 
-The option `-f` enables echo-only mode. From another terminal run the
-client:
+The option `-f` enables echo-only mode.
+From another terminal run the client with the keyblob:
 
-    $ ./examples/client/client
+    $ ./examples/client/client -i ../wolfTPM/keyblob.bin -u USER
 
-and debug for example use r -i ../wolfTPM/keyblob.bin to run and debug
-wolfTPM support
+For debuging run server like above then:
+
+    $ <lldb, gdb, etc.> ./examples/client/client
+
+Set break point or just run:
+
+    $ r -i ../wolfTPM/keyblob.bin -u USER
+
+Where the *USER* can be jack, jill, hansel, or gretel.
 
 WOLFSSH APPLICATIONS
 ====================

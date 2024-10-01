@@ -11631,11 +11631,12 @@ int SendKexDhReply(WOLFSSH* ssh)
             ret = WS_CRYPTO_FAILED;
         }
     }
-
+#if !defined(WOLFSSH_TPM)
     /* Sign h with the server's private key. */
     if (ret == WS_SUCCESS) {
         ret = SignH(ssh, sig_ptr, &sigSz, sigKeyBlock_ptr);
     }
+#endif
 
     if (sigKeyBlock_ptr != NULL) {
         if (sigKeyBlock_ptr->pubKeyFmtId == ID_SSH_RSA) {
