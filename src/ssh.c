@@ -408,6 +408,9 @@ void wolfSSH_SetTpmDev(WOLFSSH* ssh, WOLFTPM2_DEV* dev)
     if (ssh && ssh->ctx)
         ssh->ctx->tpmDev = dev;
 
+    if (ssh->ctx->tpmDev == NULL) {
+        WLOG(WS_LOG_DEBUG, "wolfSSH_SetTpmDev: Set tpm dev failed");
+    }
 }
 
 
@@ -418,6 +421,9 @@ void wolfSSH_SetTpmKey(WOLFSSH* ssh, WOLFTPM2_KEY* key)
     if (ssh && ssh->ctx)
         ssh->ctx->tpmKey = key;
 
+    if (ssh->ctx->tpmDev == NULL) {
+        WLOG(WS_LOG_DEBUG, "wolfSSH_SetTpmKey: Set tpm key failed");
+    }
 }
 
 

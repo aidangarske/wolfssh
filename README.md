@@ -34,19 +34,6 @@ Additional build options for wolfSSL are located in
 [chapter two](https://www.wolfssl.com/docs/wolfssl-manual/ch2/).
 of the wolfSSH manual.
 
-TPM dependencies
-----------------
-
-When using TPM for client side public key authentication you'll need to build
-and have wolfTPM downloaded and configured to operate with wolfSSH.
-[wolfTPM](https://www.wolfssl.com/products/wolftpm/)
-wolfTPM build configuration and steps:
-
-    $ cd wolfTPM
-    $ ./autogen.sh (if cloned from GitHub)
-    $ ./configure --enable-swtpm
-    $ make
-    $ make check
 
 building
 --------
@@ -544,10 +531,30 @@ fred-cert.der would be:
 
 TPM
 ===
+wolfSSH now supports TPM support with client key authentication.
 
-wolfSSH now supports TPM support with client key authentication. For testing TPM
-with private rsa key you'll need to run the server from the TPM simulator
-`ibmswtpm2` repository like so:
+When using TPM for client side public key authentication wolfSSH has dependencies
+on wolfCrypt and wolfTPM. Youll also need to have a tpm simulator
+[wolfTPM](https://www.wolfssl.com/products/wolftpm/)
+[wolfSSL](https://www.wolfssl.com/products/wolfssl/)
+You'll need to build and configure wolfTPM, wolfSSL, and wolfSSH like so:
+
+    $ cd <wolfSSL, wolfTPM, wolfSSH>
+    $ ./autogen.sh (if cloned from GitHub)
+    $ <Configuration>
+    $ make
+    $ make check
+
+    <Configuration>
+    wolfSSL
+        $ ./configure --enable-wolftpm --enable-debug --enable-wolfssh
+    wolfTPM
+        $ ./configure --enable-swtpm --enable-debug
+    wolfSSH
+        $ ./configure --enable-tpm --enable-debug --disable-shared
+
+For testing TPM with private rsa key you'll need to run the server from the TPM
+simulator `ibmswtpm2` repository like so:
 
     $ cd src
     $ ./tpm_server

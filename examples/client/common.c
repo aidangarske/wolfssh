@@ -1008,7 +1008,7 @@ void ClientFreeBuffers(const char* pubKeyName, const char* privKeyName,
         void* heap)
 {
     #ifdef WOLFSSH_TPM
-        wolfSSH_TPM_Cleanup(&tpmDev);
+        wolfSSH_TPM_Cleanup(&tpmDev, &tpmKey);
     #endif
     if (pubKeyName != NULL && userPublicKey != NULL) {
         WFREE(userPublicKey, heap, DYNTYPE_PRIVKEY);

@@ -7487,6 +7487,11 @@ static int DoUserAuthFailure(WOLFSSH* ssh,
             for (j = 0; j < sizeof(ssh->supportedAuth); j++) {
                 if (authList[i] == ssh->supportedAuth[j]) {
                     switch(authList[i]) {
+#ifdef WOLFSSH_TPM
+                        case ID_USERAUTH_PUBLICKEY:
+                            authType |= WOLFSSH_USERAUTH_PUBLICKEY;
+                            break;
+#else
                         case ID_USERAUTH_PASSWORD:
                             authType |= WOLFSSH_USERAUTH_PASSWORD;
                             break;
@@ -7495,6 +7500,7 @@ static int DoUserAuthFailure(WOLFSSH* ssh,
                             authType |= WOLFSSH_USERAUTH_PUBLICKEY;
                             break;
 #endif
+#endif /* WOLFSSH_TPM */
                         default:
                             break;
                     }
@@ -11176,20 +11182,16 @@ static int SignHRsa(WOLFSSH* ssh, byte* sig, word32* sigSz,
         WLOG(WS_LOG_INFO, "Signing hash with %s.",
             IdToName(ssh->handshake->pubKeyId));
     #ifdef WOLFSSH_TPM
-        if(ssh->ctx->tpmDev && ssh->ctx->tpmKey) {
+        if (ssh->ctx->tpmDev && ssh->ctx->tpmKey) {
             ret = wolfTPM2_SignHashScheme(ssh->ctx->tpmDev,
                 ssh->ctx->tpmKey, encSig, encSigSz, sig, (int*)sigSz,
                 TPM_ALG_OAEP, TPM2_GetTpmHashAlg(hashId));
         }
-        else {
-            WLOG(WS_LOG_DEBUG, "SendKexDhReply: TPM key or device not set");
-            ret = WS_CRYPTO_FAILED;
-        }
-    #else /* use wolfCrypt */
+        else
+    #endif
         ret = wc_RsaSSL_Sign(encSig, encSigSz, sig,
                 KEX_SIG_SIZE, &sigKey->sk.rsa.key,
                 ssh->rng);
-    #endif
         if (ret <= 0) {
             WLOG(WS_LOG_DEBUG, "SignHRsa: Bad RSA Sign");
             ret = WS_RSA_E;
@@ -14018,6 +14020,7 @@ int SendUserAuthRequest(WOLFSSH* ssh, byte authType, int addSig)
             authData.username = (const byte*)ssh->userName;
             authData.usernameSz = ssh->userNameSz;
 
+            #ifndef WOLFSSH_TPM
             if (authType & WOLFSSH_USERAUTH_PASSWORD) {
                 ret = ssh->ctx->userAuthCb(WOLFSSH_USERAUTH_PASSWORD,
                         &authData, ssh->userAuthCtx);
@@ -14033,6 +14036,7 @@ int SendUserAuthRequest(WOLFSSH* ssh, byte authType, int addSig)
                     authData.type = authType;
                 }
             }
+            #endif
             /* fall into public key case if password case was not successful */
             if ((ret == WS_FATAL_ERROR ||
                 !(authType & WOLFSSH_USERAUTH_PASSWORD)) &&
