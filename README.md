@@ -531,6 +531,7 @@ fred-cert.der would be:
 
 TPM
 ===
+
 wolfSSH now supports TPM support with client key authentication.
 
 When using TPM for client side public key authentication wolfSSH has dependencies

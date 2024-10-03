@@ -90,6 +90,9 @@ WOLFSSH_API void* wolfSSH_GetHighwaterCtx(WOLFSSH*);
 WOLFSSH_API int wolfSSH_ReadKey_buffer(const byte* in, word32 inSz, int format,
         byte** out, word32* outSz, const byte** outType, word32* outTypeSz,
         void* heap);
+WOLFSSH_API int wolfSSH_ReadPublicKey_buffer(const byte* in, word32 inSz, int format,
+        byte** out, word32* outSz, const byte** outType, word32* outTypeSz,
+        void* heap);
 WOLFSSH_API int wolfSSH_ReadKey_file(const char* name,
         byte** out, word32* outSz, const byte** outType, word32* outTypeSz,
         byte* isPrivate, void* heap);
@@ -476,7 +479,9 @@ enum WS_TpmResults
     WOLFSSH_TPM_FAILED_INIT,
     WOLFSSH_TPM_FAILED_LOAD_PRIMARY,
     WOLFSSH_TPM_FAILED_READ_KEYBLOB,
+    WOLFSSH_TPM_FAILED_EXPORT_KEY,
     WOLFSSH_TPM_FAILED_LOAD_KEY,
+    WOLFSSH_TPM_FAILED_READ_PUBLIC_KEY
 };
 
 WOLFSSH_API int wolfSSH_RealPath(const char* defaultPath, char* in,

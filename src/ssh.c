@@ -1707,7 +1707,7 @@ static int DoSshPubKey(const byte* in, word32 inSz, byte** out,
 
 static int DoAsn1Key(const byte* in, word32 inSz, byte** out,
         word32* outSz, const byte** outType, word32* outTypeSz,
-        void* heap)
+        int isPrivate, void* heap)
 {
     int ret = WS_SUCCESS;
     byte* newKey = NULL;
@@ -1722,13 +1722,13 @@ static int DoAsn1Key(const byte* in, word32 inSz, byte** out,
     }
     else {
         if (*outSz < inSz) {
-            WLOG(WS_LOG_DEBUG, "DER private key output size too small");
+            WLOG(WS_LOG_DEBUG, "DER key output size too small");
             return WS_BUFFER_E;
         }
         newKey = *out;
     }
 
-    ret = IdentifyAsn1Key(in, inSz, 1, heap);
+    ret = IdentifyAsn1Key(in, inSz, isPrivate, heap);
 
     if (ret > 0) {
         *out = newKey;
@@ -1751,7 +1751,7 @@ static int DoAsn1Key(const byte* in, word32 inSz, byte** out,
 
 static int DoPemKey(const byte* in, word32 inSz, byte** out,
         word32* outSz, const byte** outType, word32* outTypeSz,
-        void* heap)
+        int isPrivate, void* heap)
 {
     int ret = WS_SUCCESS;
     byte* newKey = NULL;
@@ -1774,7 +1774,12 @@ static int DoPemKey(const byte* in, word32 inSz, byte** out,
     }
 
     /* If it is PEM, convert to ASN1 then process. */
-    ret = wc_KeyPemToDer(in, inSz, newKey, newKeySz, NULL);
+    if (isPrivate) {
+        ret = wc_KeyPemToDer(in, inSz, newKey, newKeySz, NULL);
+    }
+    else {
+        ret = wc_PubKeyPemToDer(in, inSz, newKey, newKeySz);
+    }
     if (ret > 0) {
         newKeySz = (word32)ret;
         ret = WS_SUCCESS;
@@ -1867,9 +1872,9 @@ static int DoOpenSshKey(const byte* in, word32 inSz, byte** out,
    to a constant string. Format indicates the format of the key, currently
    either SSH format (a public key) or ASN.1 in DER or PEM format (a
    private key). */
-int wolfSSH_ReadKey_buffer(const byte* in, word32 inSz, int format,
+static int wolfSSL_readkey_buffer_ex(const byte* in, word32 inSz, int format,
         byte** out, word32* outSz, const byte** outType, word32* outTypeSz,
-        void* heap)
+        int isPrivate, void* heap)
 {
     int ret = WS_SUCCESS;
 
@@ -1881,10 +1886,12 @@ int wolfSSH_ReadKey_buffer(const byte* in, word32 inSz, int format,
         ret = DoSshPubKey(in, inSz, out, outSz, outType, outTypeSz, heap);
     }
     else if (format == WOLFSSH_FORMAT_ASN1) {
-        ret = DoAsn1Key(in, inSz, out, outSz, outType, outTypeSz, heap);
+        ret = DoAsn1Key(in, inSz, out, outSz, outType, outTypeSz,
+            isPrivate, heap);
     }
     else if (format == WOLFSSH_FORMAT_PEM) {
-        ret = DoPemKey(in, inSz, out, outSz, outType, outTypeSz, heap);
+        ret = DoPemKey(in, inSz, out, outSz, outType, outTypeSz,
+            isPrivate, heap);
     }
     else if (format == WOLFSSH_FORMAT_OPENSSH) {
         ret = DoOpenSshKey(in, inSz, out, outSz, outType, outTypeSz, heap);
@@ -1895,6 +1902,21 @@ int wolfSSH_ReadKey_buffer(const byte* in, word32 inSz, int format,
     }
 
     return ret;
+}
+int wolfSSH_ReadKey_buffer(const byte* in, word32 inSz, int format,
+        byte** out, word32* outSz, const byte** outType, word32* outTypeSz,
+        void* heap)
+{
+    return wolfSSL_readkey_buffer_ex(in, inSz, format, out, outSz,
+        outType, outTypeSz, 1, heap);
+}
+
+int wolfSSH_ReadPublicKey_buffer(const byte* in, word32 inSz, int format,
+        byte** out, word32* outSz, const byte** outType, word32* outTypeSz,
+        void* heap)
+{
+    return wolfSSL_readkey_buffer_ex(in, inSz, format, out, outSz,
+        outType, outTypeSz, 0, heap);
 }
 
 

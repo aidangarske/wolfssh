@@ -791,7 +791,7 @@ THREAD_RETURN WOLFSSH_THREAD client_test(void* args)
         err_sys("If setting priv key, need pub key.");
     }
     #else
-     if (pubKeyName == NULL && privKeyName != NULL) {
+    if (pubKeyName == NULL && privKeyName != NULL) {
         err_sys("If setting priv key, need pub key.");
     }
     #endif
