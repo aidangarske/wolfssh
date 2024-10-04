@@ -11115,8 +11115,8 @@ static int TPM2_GetTpmHashAlg(int hashType)
     switch (hashType) {
         case (int)WC_HASH_TYPE_SHA:
             return TPM_ALG_SHA1;
-        case (int)TPM_ALG_SHA256:
-            return TPM_ALG_SHA1;
+        case (int)WC_HASH_TYPE_SHA256:
+            return TPM_ALG_SHA256;
         case (int)WC_HASH_TYPE_SHA384:
             return TPM_ALG_SHA384;
         case (int)WC_HASH_TYPE_SHA512:
@@ -12707,7 +12707,7 @@ static int PrepareUserAuthRequestRsa(WOLFSSH* ssh, word32* payloadSz,
                         authData->sf.publicKey.privateKeySz, &idx);
             }
         }
-        #else
+        #else /* wolfSSH_TPM */
         {
             ret = wc_RsaPublicKeyDecode(authData->sf.publicKey.publicKey,
                     &idx, &keySig->ks.rsa.key,
@@ -12857,11 +12857,12 @@ static int BuildUserAuthRequestRsa(WOLFSSH* ssh,
                     int sigSz = 0;
                     WLOG(WS_LOG_INFO, "Signing hash with RSA.");
 #ifdef WOLFSSH_TPM
+                sigSz = keySig->sigSz;
                 if(ssh->ctx->tpmDev && ssh->ctx->tpmKey) {
                     wolfTPM2_SignHashScheme(ssh->ctx->tpmDev, ssh->ctx->tpmKey,
-                                            encDigest, encDigestSz,
-                                            output+begin, (int*)&sigSz,
-                                            TPM_ALG_OAEP, TPM_ALG_SHA1);
+                            encDigest, encDigestSz, output+begin,
+                            (int*)&sigSz, TPM_ALG_OAEP,
+                            TPM2_GetTpmHashAlg(hashId));
                 }
                 else {
                     WLOG(WS_LOG_DEBUG, "SendKexDhReply: TPM key or device not set");
@@ -12869,7 +12870,7 @@ static int BuildUserAuthRequestRsa(WOLFSSH* ssh,
                 }
 #else /* use wolfCrypt */
                 sigSz = wc_RsaSSL_Sign(encDigest, encDigestSz,
-                         output + begin, keySig->sigSz,
+                        output + begin, keySig->sigSz,
                         &keySig->ks.rsa.key, ssh->rng);
 #endif /* WOLFSSH_TPM */
                 if (sigSz <= 0 || (word32)sigSz != keySig->sigSz) {
@@ -12877,9 +12878,11 @@ static int BuildUserAuthRequestRsa(WOLFSSH* ssh,
                     ret = WS_RSA_E;
                 }
                 else {
+                    #ifndef WOLFSSH_TPM
                     ret = wolfSSH_RsaVerify(output + begin, keySig->sigSz,
                             encDigest, encDigestSz, &keySig->ks.rsa.key,
                             ssh->ctx->heap, "SUAR");
+                    #endif
                 }
 
                 if (ret == WS_SUCCESS)
