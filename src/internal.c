@@ -12694,7 +12694,8 @@ static int PrepareUserAuthRequestRsa(WOLFSSH* ssh, word32* payloadSz,
                     authData->sf.publicKey.publicKeySz);
         }
         else
-        #endif
+        #endif /* WOLFSSH_AGENT */
+        #ifndef WOLFSSH_TPM
         {
             ret = wc_RsaPrivateKeyDecode(authData->sf.publicKey.privateKey,
                     &idx, &keySig->ks.rsa.key,
@@ -12706,6 +12707,13 @@ static int PrepareUserAuthRequestRsa(WOLFSSH* ssh, word32* payloadSz,
                         authData->sf.publicKey.privateKeySz, &idx);
             }
         }
+        #else
+        {
+            ret = wc_RsaPublicKeyDecode(authData->sf.publicKey.publicKey,
+                    &idx, &keySig->ks.rsa.key,
+                    authData->sf.publicKey.publicKeySz);
+        }
+        #endif /* WOLFSSH_TPM */
     }
 
     if (ret == WS_SUCCESS) {

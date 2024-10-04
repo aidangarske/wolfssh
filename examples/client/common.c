@@ -824,10 +824,6 @@ static int wolfSSH_TPM_InitKey(WOLFTPM2_DEV* dev, const char* name,
     WOLFTPM2_KEYBLOB tpmKeyBlob;
     byte der[512];
     word32 derSz = (word32)sizeof(der);
-    byte* out = NULL;
-    word32 outSz = 0;
-    const byte* outType = NULL;
-    word32 outTypeSz = 0;
     void* heap = NULL;
 
     WLOG(WS_LOG_DEBUG, "Entering wolfSSH_TPM_InitKey()");
@@ -855,15 +851,6 @@ static int wolfSSH_TPM_InitKey(WOLFTPM2_DEV* dev, const char* name,
         return WOLFSSH_TPM_FAILED_READ_KEYBLOB;
     }
 
-    /* Read the public key and extract the public key as a DER/ASN.1 */
-    if (wolfTPM2_ExportPublicKeyBuffer(dev, (WOLFTPM2_KEY*)&tpmKeyBlob,
-                        ENCODING_TYPE_ASN1, der, &derSz) != TPM_RC_SUCCESS) {
-#ifdef DEBUG_WOLFSSH
-        printf("Exporting TPM key failed\n");
-#endif
-        return WOLFSSH_TPM_FAILED_EXPORT_KEY;
-    }
-
     /* Load the public key into the TPM device */
     if (wolfTPM2_LoadKey(dev, &tpmKeyBlob, &storage.handle) != TPM_RC_SUCCESS) {
 #ifdef DEBUG_WOLFSSH
@@ -875,9 +862,21 @@ static int wolfSSH_TPM_InitKey(WOLFTPM2_DEV* dev, const char* name,
     printf("Loaded key to 0x%x\n", (word32)tpmKeyBlob.handle.hndl);
 #endif
 
+    /* Read the public key and extract the public key as a DER/ASN.1 */
+    if (wolfTPM2_ExportPublicKeyBuffer(dev, (WOLFTPM2_KEY*)&tpmKeyBlob,
+                           ENCODING_TYPE_ASN1, der, &derSz) != TPM_RC_SUCCESS) {
+#ifdef DEBUG_WOLFSSH
+        printf("Exporting TPM key failed\n");
+#endif
+        return WOLFSSH_TPM_FAILED_EXPORT_KEY;
+    }
+
     /* Read public key from the buffer */
-    rc = wolfSSH_ReadPublicKey_buffer(der, derSz, WOLFSSH_FORMAT_ASN1, &out,
-                     &outSz, &outType, &outTypeSz, heap);
+    byte* p = userPublicKey;
+    userPublicKeySz = sizeof(userPublicKeyBuf);
+
+    rc = wolfSSH_ReadPublicKey_buffer(der, derSz, WOLFSSH_FORMAT_ASN1, &p,
+        &userPublicKeySz, &userPublicKeyType, &userPublicKeyTypeSz, heap);
     if (rc != TPM_RC_SUCCESS) {
 #ifdef DEBUG_WOLFSSH
         printf("Reading public key failed returned: %d\n", rc);

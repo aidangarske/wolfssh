@@ -498,7 +498,7 @@ int ClientUserAuth(byte authType,
                       void* ctx)
 {
     int ret = WOLFSSH_USERAUTH_SUCCESS;
-
+WLOG(WS_LOG_DEBUG, "Entering ClientUserAuth()");
 #ifdef DEBUG_WOLFSSH
     /* inspect supported types from server */
     printf("Server supports:\n");
@@ -571,7 +571,7 @@ int ClientUserAuth(byte authType,
             authData->sf.password.passwordSz = passwordSz;
         }
     }
-
+    WLOG(WS_LOG_DEBUG, "Exiting ClientUserAuth()");
     return ret;
 }
 
