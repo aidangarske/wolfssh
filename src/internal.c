@@ -11185,7 +11185,7 @@ static int SignHRsa(WOLFSSH* ssh, byte* sig, word32* sigSz,
         if (ssh->ctx->tpmDev && ssh->ctx->tpmKey) {
             ret = wolfTPM2_SignHashScheme(ssh->ctx->tpmDev,
                 ssh->ctx->tpmKey, encSig, encSigSz, sig, (int*)sigSz,
-                TPM_ALG_OAEP, TPM2_GetTpmHashAlg(hashId));
+                TPM_ALG_RSASSA, TPM2_GetTpmHashAlg(hashId));
         }
         else
     #endif
@@ -12861,7 +12861,7 @@ static int BuildUserAuthRequestRsa(WOLFSSH* ssh,
                 if(ssh->ctx->tpmDev && ssh->ctx->tpmKey) {
                     wolfTPM2_SignHashScheme(ssh->ctx->tpmDev, ssh->ctx->tpmKey,
                             encDigest, encDigestSz, output+begin,
-                            (int*)&sigSz, TPM_ALG_OAEP,
+                            (int*)&sigSz, TPM_ALG_RSASSA,
                             TPM2_GetTpmHashAlg(hashId));
                 }
                 else {

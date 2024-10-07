@@ -886,6 +886,15 @@ static int wolfSSH_TPM_InitKey(WOLFTPM2_DEV* dev, const char* name,
 
     XMEMCPY(&pTpmKey->handle, &tpmKeyBlob.handle, sizeof(pTpmKey->handle));
     XMEMCPY(&pTpmKey->pub, &tpmKeyBlob.pub, sizeof(pTpmKey->pub));
+
+    /* workaround until password can be supplied */
+    /* consider a refactor to take a 32-bit handle and key auth password */
+    static const char gKeyAuth[] =        "ThisIsMyKeyAuth";
+    /* set session for authorization key */
+    pTpmKey->handle.auth.size = (int)sizeof(gKeyAuth)-1;
+    XMEMCPY(pTpmKey->handle.auth.buffer, gKeyAuth, pTpmKey->handle.auth.size);
+
+    wolfTPM2_UnloadHandle(dev, &storage.handle);
     WLOG(WS_LOG_DEBUG, "Leaving wolfSSH_TPM_InitKey()");
     return WOLFSSH_TPM_SUCCESS;
 }
@@ -939,6 +948,8 @@ int ClientSetPrivateKey(const char* privKeyName, int userEcc, void* heap)
          * Successfully loaded TPM key has a TPM Handle that is
          * later passed to wolfSSH for use
          */
+        WMEMSET(&tpmDev, 0, sizeof(tpmDev));
+        WMEMSET(&tpmKey, 0, sizeof(tpmKey));
         ret = wolfSSH_TPM_InitKey(&tpmDev, privKeyName, &tpmKey);
     #elif !defined(NO_FILESYSTEM)
         userPrivateKey = NULL; /* create new buffer based on parsed input */
@@ -955,6 +966,16 @@ int ClientSetPrivateKey(const char* privKeyName, int userEcc, void* heap)
     return ret;
 }
 
+#ifdef WOLFSSH_TPM
+int CLientSetTpm(WOLFSSH* ssh)
+{
+    if (ssh != NULL) {
+        wolfSSH_SetTpmDev(ssh, &tpmDev);
+        wolfSSH_SetTpmKey(ssh, &tpmKey);
+    }
+    return 0;
+}
+#endif
 
 /* Set public key to use
  * returns 0 on success */

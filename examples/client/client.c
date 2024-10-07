@@ -553,7 +553,7 @@ static int wolfSSH_AGENT_DefaultActions(WS_AgentCbAction action, void* vCtx)
             ret = WS_AGENT_NOT_AVAILABLE;
 
         if (ret == WS_AGENT_SUCCESS) {
-            memset(name, 0, sizeof(struct sockaddr_un));
+            WMEMSET(name, 0, sizeof(struct sockaddr_un));
             name->sun_family = AF_LOCAL;
             strncpy(name->sun_path, sockName, sizeof(name->sun_path));
             name->sun_path[sizeof(name->sun_path) - 1] = '\0';
@@ -655,10 +655,6 @@ THREAD_RETURN WOLFSSH_THREAD client_test(void* args)
 #ifdef WOLFSSH_AGENT
     byte useAgent = 0;
     WS_AgentCbActionCtx agentCbCtx;
-#endif
-#ifdef WOLFSSH_TPM
-    WOLFTPM2_DEV tpmDev;
-    WOLFTPM2_KEY tpmKey;
 #endif
 
     int     argc = ((func_args*)args)->argc;
@@ -851,14 +847,8 @@ THREAD_RETURN WOLFSSH_THREAD client_test(void* args)
         err_sys("Couldn't create wolfSSH session.");
 
 #ifdef WOLFSSH_TPM
-    /* Link the TPM 2.0 device to the SSH session
-     * This way, SSH client operations that can
-     * take advantage of the hardware security
-     * will have access to the TPM 2.0 device */
-    wolfSSH_SetTpmDev(ssh, &tpmDev);
-    wolfSSH_SetTpmKey(ssh, &tpmKey);
+    CLientSetTpm(ssh);
 #endif
-
 #if defined(WOLFSSL_PTHREADS) && defined(WOLFSSL_TEST_GLOBAL_REQ)
     wolfSSH_SetGlobalReq(ctx, callbackGlobalReq);
     wolfSSH_SetGlobalReqCtx(ssh, &ssh); /* dummy ctx */
@@ -869,7 +859,7 @@ THREAD_RETURN WOLFSSH_THREAD client_test(void* args)
 
 #ifdef WOLFSSH_AGENT
     if (useAgent) {
-        memset(&agentCbCtx, 0, sizeof(agentCbCtx));
+        WMEMSET(&agentCbCtx, 0, sizeof(agentCbCtx));
         agentCbCtx.state = AGENT_STATE_INIT;
         wolfSSH_set_agent_cb_ctx(ssh, &agentCbCtx);
     }

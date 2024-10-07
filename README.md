@@ -548,11 +548,11 @@ You'll need to build and configure wolfTPM, wolfSSL, and wolfSSH like so:
 
     <Configuration>
     wolfSSL
-        $ ./configure --enable-wolftpm --enable-debug --enable-wolfssh
+        $ ./configure --enable-wolftpm --enable-wolfssh
     wolfTPM
-        $ ./configure --enable-swtpm --enable-debug
+        $ ./configure --enable-swtpm
     wolfSSH
-        $ ./configure --enable-tpm --enable-debug --disable-shared
+        $ ./configure --enable-tpm
 
 For testing TPM with private rsa key you'll need to run the server from the TPM
 simulator `ibmswtpm2` repository like so:
@@ -563,7 +563,9 @@ simulator `ibmswtpm2` repository like so:
 Before starting the echoserver you need to run the keygen for keyblob in wolfTPM
 using:
 
-    $ ./examples/keygen/keygen keyblob.bin -rsa
+    $ ./examples/keygen/keygen keyblob.bin -rsa -t -pem
+
+Take ak.pem and convert the TPM public key to the ssh-rsa BASE64 username format. Use on echoserver.
 
 The directory `examples` contains an echoserver that any client should
 be able to connect to. From wolfSSH open two terminal instances and run the
