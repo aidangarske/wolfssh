@@ -576,7 +576,7 @@ server:
 The option `-f` enables echo-only mode.
 From another terminal run the client with the keyblob:
 
-    $ ./examples/client/client -i ../wolfTPM/keyblob.bin -u USER
+    $ ./examples/client/client -i ../wolfTPM/keyblob.bin -u jill
 
 For debuging run server like above then:
 
