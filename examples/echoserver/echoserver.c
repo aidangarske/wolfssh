@@ -1797,7 +1797,13 @@ static const char samplePublicKeyRsaBuffer[] =
     "P6BSfbVTE9mfIK5IsUiZGd8SoE9kSV2pJ2FvZeBQENoAxEFk0zZL9tchPS+OCUGbK4SDjz"
     "uNZl/30Mczs73N3MBzi6J1oPo7sFlqzB6ecBjK2Kpjus4Y1rYFphJnUxtKvB0s+hoaadru"
     "biE57dK6BrH5iZwVLTQKux31uCJLPhiktI3iLbdlGZEctJkTasfVSsUizwVIyRjhVKmbdI"
-    "RGwkU38D043AR1h0mUoGCPIKuqcFMf gretel\n";
+    "RGwkU38D043AR1h0mUoGCPIKuqcFMf gretel\n"
+    "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCAHRi/OSW8yi3ESqD9Jn48l1PG+mAGJ5"
+    "ppuyUm7YHlHzFwT7R5Hd2ETe846mzqDybthmRIFQ9YZS8+8JFGmBjrC7/A7cO5kQYmsT6u"
+    "oBpKUDD9JuziJJyiyLPP4L5jNy4OpxScXtgF1ybTUAa1GbZqoLiczbTw/KH0fPPSLb2LSq"
+    "yOuUaoJKXoA5o2naj5eIetd6/PLdVCHG6PKFeNeAgrgbarQ4KrjEuKKL6nss17KL0hm4rI"
+    "Pvvw78Nwh+1KyGW1GQQJLe8i6gHOgZB8IsDcxkMZ54fD5yc4ufpkYsj6GdQ2Oxo2BS8aQU"
+    "Wn9LgOF54bUCiKKR6DlahLQcNcUM9B jill\n";
 #endif
 
 

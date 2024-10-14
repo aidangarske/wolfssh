@@ -895,8 +895,10 @@ static int wolfSSH_TPM_InitKey(WOLFTPM2_DEV* dev, const char* name,
     pTpmKey->handle.auth.size = (int)sizeof(gKeyAuth)-1;
     XMEMCPY(pTpmKey->handle.auth.buffer, gKeyAuth, pTpmKey->handle.auth.size);
 
+    /* Unload key and storage handle */
     wolfTPM2_UnloadHandle(dev, &storage.handle);
     wolfTPM2_UnloadHandle(dev, &tpmKey.handle);
+
     WLOG(WS_LOG_DEBUG, "Leaving wolfSSH_TPM_InitKey()");
     return WOLFSSH_TPM_SUCCESS;
 }

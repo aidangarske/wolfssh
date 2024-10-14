@@ -571,9 +571,8 @@ The directory `examples` contains an echoserver that any client should
 be able to connect to. From wolfSSH open two terminal instances and run the
 server:
 
-    $ ./examples/echoserver/echoserver -f
+    $ ./examples/echoserver/echoserver
 
-The option `-f` enables echo-only mode.
 From another terminal run the client with the keyblob:
 
     $ ./examples/client/client -i ../wolfTPM/keyblob.bin -u jill
@@ -584,9 +583,7 @@ For debuging run server like above then:
 
 Set break point or just run:
 
-    $ r -i ../wolfTPM/keyblob.bin -u USER
-
-Where the *USER* can be jack, jill, hansel, or gretel.
+    $ r -i ../wolfTPM/keyblob.bin -u jill
 
 WOLFSSH APPLICATIONS
 ====================
