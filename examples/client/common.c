@@ -1131,16 +1131,16 @@ void ClientFreeBuffers(const char* pubKeyName, const char* privKeyName,
         void* heap)
 {
     word32 entry;
-    #ifdef WOLFSSH_TPM
+#ifdef WOLFSSH_TPM
     wolfSSH_TPM_Cleanup(&tpmDev, &tpmKey);
-    #endif
+#endif
     if (pubKeyName != NULL && userPublicKey != NULL &&
         userPublicKey != userPublicKeyBuf) {
-    if (pubKeyName != NULL && userPublicKey != NULL) {
         WFREE(userPublicKey, heap, DYNTYPE_PRIVKEY);
     }
 
-    if (privKeyName != NULL && userPrivateKey != NULL && userPrivateKeyAlloc) {
+    if (privKeyName != NULL && userPrivateKey != NULL &&
+        userPrivateKeyAlloc) {
         WFREE(userPrivateKey, heap, DYNTYPE_PRIVKEY);
     }
 
