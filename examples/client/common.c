@@ -756,9 +756,30 @@ int ClientUseCert(const char* certName, void* heap)
 
 #ifdef WOLFSSH_TPM
 
-#define TPM2_DEMO_STORAGE_KEY_HANDLE    0x81000200  /* Persistent Storage Key Handle (RSA) */
+/* Persistent Storage Key Handle (RSA) */
+#ifndef WOLFSSH_TPM_SRK_HANDLE
+    #define WOLFSSH_TPM_SRK_HANDLE    0x81000200
+#endif
 
-static const char gStorageKeyAuth[] = "ThisIsMyStorageKeyAuth";
+/* Storage Key Authentication Password */
+#ifndef WOLFSSH_TPM_SRK_AUTH
+    #define WOLFSSH_TPM_SRK_AUTH      "ThisIsMyStorageKeyAuth"
+#endif
+
+/* Key Authentication Password */
+#ifndef WOLFSSH_TPM_KEY_AUTH
+    #define WOLFSSH_TPM_KEY_AUTH      "ThisIsMyKeyAuth"
+#endif
+
+/* Enable use of endorsement key instead of storage key */
+#ifndef WOLFSSH_TPM_ENDORSEMENT_KEY
+    #define WOLFSSH_TPM_ENDORSEMENT_KEY 1
+#endif
+
+static const char gStorageKeyAuth[] = WOLFSSH_TPM_SRK_AUTH;
+static const char gKeyAuth[] = WOLFSSH_TPM_KEY_AUTH;
+
+#define TPM2_DEMO_STORAGE_KEY_HANDLE WOLFSSH_TPM_SRK_HANDLE
 
 static int getPrimaryStoragekey(WOLFTPM2_DEV* pDev,
                          WOLFTPM2_KEY* pStorageKey,
@@ -798,7 +819,6 @@ static int getPrimaryStoragekey(WOLFTPM2_DEV* pDev,
     WLOG(WS_LOG_DEBUG, "Leaving getPrimaryStoragekey(), rc = %d", rc);
     return rc;
 }
-
 
 static int readKeyBlob(const char* filename, WOLFTPM2_KEYBLOB* key)
 {
@@ -884,20 +904,50 @@ exit:
     return rc;
 }
 
+static int getPrimaryEndorsementKey(WOLFTPM2_DEV* pDev, WOLFTPM2_KEY* pEndorseKey, TPM_ALG_ID alg)
+{
+    int rc;
+    WOLFTPM2_SESSION tpmSession;
+
+    WLOG(WS_LOG_DEBUG, "Entering getPrimaryEndorsementKey()");
+
+    /* Create endorsement key (EK) */
+    rc = wolfTPM2_CreateEK(pDev, pEndorseKey, alg);
+    if (rc != 0) {
+        WLOG(WS_LOG_DEBUG, "Creating EK failed, rc: %d", rc);
+        return rc;
+    }
+
+    /* EK requires Policy auth, not Password */
+    pEndorseKey->handle.policyAuth = 1;
+
+    /* Create and set policy session */
+    rc = wolfTPM2_CreateAuthSession_EkPolicy(pDev, &tpmSession);
+    if (rc != 0) {
+        WLOG(WS_LOG_DEBUG, "Creating EK policy session failed, rc: %d", rc);
+        return rc;
+    }
+
+    rc = wolfTPM2_SetAuthSession(pDev, 0, &tpmSession, 0);
+    WLOG(WS_LOG_DEBUG, "Leaving getPrimaryEndorsementKey(), rc = %d", rc);
+    return rc;
+}
+
 static int wolfSSH_TPM_InitKey(WOLFTPM2_DEV* dev, const char* name,
                                WOLFTPM2_KEY* pTpmKey)
 {
     int rc = 0;
+#if WOLFSSH_TPM_ENDORSEMENT_KEY
+    WOLFTPM2_KEY endorse;
+#else
     WOLFTPM2_KEY storage;
+#endif
     WOLFTPM2_KEYBLOB tpmKeyBlob;
     byte* p = NULL;
-    /* TODO: workaround until password can be supplied */
-    /* consider a refactor to take a 32-bit handle and key auth password */
-    static const char gKeyAuth[] = "ThisIsMyKeyAuth";
 
     WLOG(WS_LOG_DEBUG, "Entering wolfSSH_TPM_InitKey()");
 
-    /* Initilize the TPM 2.0 device */
+    /* Initialize the TPM 2.0 device */
     if (rc == 0) {
         rc = wolfTPM2_Init(dev, TPM2_IoCb, NULL);
         if (rc != 0) {
@@ -907,10 +957,17 @@ static int wolfSSH_TPM_InitKey(WOLFTPM2_DEV* dev, const char* name,
 
     /* TPM 2.0 keys live under a Primary Key, acquire such key */
     if (rc == 0) {
+    #if WOLFSSH_TPM_ENDORSEMENT_KEY
+        rc = getPrimaryEndorsementKey(dev, &endorse, TPM_ALG_RSA);
+        if (rc != 0) {
+            WLOG(WS_LOG_DEBUG, "Acquiring Primary Endorsement Key failed, rc: %d", rc);
+        }
+    #else
         rc = getPrimaryStoragekey(dev, &storage, TPM_ALG_RSA);
         if (rc != 0) {
-            WLOG(WS_LOG_DEBUG, "Acquiring a Primary TPM 2.0 Key failed, rc: %d", rc);
+            WLOG(WS_LOG_DEBUG, "Acquiring Primary Storage Key failed, rc: %d", rc);
         }
+    #endif
     }
 
     /* Load the TPM 2.0 key blob from disk */
@@ -930,7 +987,11 @@ static int wolfSSH_TPM_InitKey(WOLFTPM2_DEV* dev, const char* name,
 
     /* Load the public key into the TPM device */
     if (rc == 0) {
+    #if WOLFSSH_TPM_ENDORSEMENT_KEY
+        rc = wolfTPM2_LoadKey(dev, &tpmKeyBlob, &endorse.handle);
+    #else
         rc = wolfTPM2_LoadKey(dev, &tpmKeyBlob, &storage.handle);
+    #endif
         if (rc != 0) {
             WLOG(WS_LOG_DEBUG, "wolfTPM2_LoadKey failed, rc: %d", rc);
         }
@@ -958,11 +1019,15 @@ static int wolfSSH_TPM_InitKey(WOLFTPM2_DEV* dev, const char* name,
         userPublicKey = p;
     }
 
-    /* Unload SRK storage handle */
+    /* Unload primary key handle */
     if (rc == 0) {
         XMEMCPY(&pTpmKey->handle, &tpmKeyBlob.handle, sizeof(pTpmKey->handle));
         XMEMCPY(&pTpmKey->pub, &tpmKeyBlob.pub, sizeof(pTpmKey->pub));
+    #if WOLFSSH_TPM_ENDORSEMENT_KEY
+        wolfTPM2_UnloadHandle(dev, &endorse.handle);
+    #else
         wolfTPM2_UnloadHandle(dev, &storage.handle);
+    #endif
     }
 
     WLOG(WS_LOG_DEBUG, "Leaving wolfSSH_TPM_InitKey()");
