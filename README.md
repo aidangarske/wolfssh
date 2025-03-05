@@ -529,10 +529,8 @@ fred-cert.der would be:
 
     $ ./examples/client/client -u fred -J ./keys/fred-cert.der -i ./keys/fred-key.der
 
-TPM
-===
-
-wolfSSH now supports TPM public key authentication.
+TPM PUBLIC KEY AUTHENTICATION
+=============================
 
 When using TPM for client side public key authentication wolfSSH has dependencies
 on wolfCrypt and wolfTPM. Youll also need to have a tpm simulator
@@ -560,9 +558,14 @@ simulator like `ibmswtpm2`. This can be done as followed:
     $ cd src
     $ ./tpm_server
 
-Before starting the echoserver you need to run the keygen for keyblob in wolfTPM
-using:
+Before starting the echoserver you need to run the keygen for keyblob in wolfTPM.
+You must choose between using the primary/endorsement key (recommended) or the
+storage root key. The following commands will generate the keyblob:
 
+For primary endorsement key:
+    $ ./examples/keygen/keygen keyblob.bin -rsa -t -pem -eh
+
+For storage root key:
     $ ./examples/keygen/keygen keyblob.bin -rsa -t -pem
 
 This will produce a key.pem TPM public key which needs to be converted the to
@@ -576,9 +579,14 @@ server:
 
     $ ./examples/echoserver/echoserver
 
-From another terminal run the client with the keyblob:
+From another terminal run the client with the keyblob. You must specify which
+key type to use:
 
-    $ ./examples/client/client -i ../wolfTPM/keyblob.bin -u hansel
+Using primary endorsement key (recommened)
+    $ ./examples/client/client -i ../wolfTPM/keyblob.bin -u hansel -s pk
+
+Using storage root key
+    $ ./examples/client/client -i ../wolfTPM/keyblob.bin -u hansel -s srk
 
 For debuging run server like above then:
 

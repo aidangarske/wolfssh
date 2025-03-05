@@ -22,7 +22,8 @@
 #define WOLFSSH_COMMON_H
 int ClientLoadCA(WOLFSSH_CTX* ctx, const char* caCert);
 int ClientUsePubKey(const char* pubKeyName, int userEcc, void* heap);
-int ClientSetPrivateKey(const char* privKeyName, int userEcc, void* heap);
+int ClientSetPrivateKey(const char* privKeyName, int userEcc, void* heap,
+        int useEndorsementKey);
 int ClientUseCert(const char* certName, void* heap);
 int ClientSetEcho(int type);
 int ClientUserAuth(byte authType,

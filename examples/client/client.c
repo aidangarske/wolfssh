@@ -125,6 +125,9 @@ static void ShowUsage(void)
     printf(" -E            List all possible algos\n");
     printf(" -k            set the list of key algos to use\n");
     printf(" -q            turn off debugging output\n");
+#ifdef WOLFSSH_TPM
+    printf(" -s <type>     TPM key type: pk (primary key) or srk (storage)\n");
+#endif
 }
 
 
@@ -640,6 +643,7 @@ THREAD_RETURN WOLFSSH_THREAD client_test(void* args)
     int ret = 0;
     int ch;
     int userEcc = 0;
+    int useEndorsementKey = -1;
     word16 port = wolfSshPort;
     char* host = (char*)wolfSshIp;
     const char* username = NULL;
@@ -665,7 +669,8 @@ THREAD_RETURN WOLFSSH_THREAD client_test(void* args)
 
     (void)keepOpen;
 
-    while ((ch = mygetopt(argc, argv, "?ac:h:i:j:p:tu:xzNP:RJ:A:XeEk:q")) != -1) {
+    while ((ch = mygetopt(argc, argv,
+        "?ac:h:i:j:p:tu:xzNP:RJ:A:XeEk:qs:")) != -1) {
         switch (ch) {
             case 'h':
                 host = myoptarg;
@@ -769,6 +774,22 @@ THREAD_RETURN WOLFSSH_THREAD client_test(void* args)
                 break;
         #endif
 
+            case 's':
+                if (myoptarg == NULL) {
+                    err_sys("TPM key type cannot be NULL");
+                }
+                if (strcmp(myoptarg, "pk") == 0) {
+                    useEndorsementKey = 1;  /* Use primary/endorsement key */
+                }
+                else if (strcmp(myoptarg, "srk") == 0) {
+                    useEndorsementKey = 0;  /* Use storage key */
+                }
+                else {
+                    useEndorsementKey = -1;
+                    err_sys("Invalid TPM key type. Must be 'pk' or 'srk'");
+                }
+                break;
+
             case '?':
                 ShowUsage();
                 exit(EXIT_SUCCESS);
@@ -798,7 +819,8 @@ THREAD_RETURN WOLFSSH_THREAD client_test(void* args)
     }
     #endif
 #endif
-    ret = ClientSetPrivateKey(privKeyName, userEcc, NULL);
+    ret = ClientSetPrivateKey(privKeyName, userEcc, NULL,
+        useEndorsementKey);
     if (ret != 0) {
         err_sys("Error setting private key");
     }
@@ -853,7 +875,14 @@ THREAD_RETURN WOLFSSH_THREAD client_test(void* args)
         err_sys("Couldn't create wolfSSH session.");
 
 #ifdef WOLFSSH_TPM
-    CLientSetTpm(ssh);
+    if (useEndorsementKey == -1) {
+        ClientFreeBuffers(pubKeyName, privKeyName, NULL);
+        wolfSSH_free(ssh);
+        wolfSSH_CTX_free(ctx);
+        err_sys("TPM key type must be specified as either 'pk' or 'srk'");
+    } else {
+        CLientSetTpm(ssh);
+    }
 #endif
 #if defined(WOLFSSL_PTHREADS) && defined(WOLFSSL_TEST_GLOBAL_REQ)
     wolfSSH_SetGlobalReq(ctx, callbackGlobalReq);
