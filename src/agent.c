@@ -1387,7 +1387,7 @@ static int DoMessage(WOLFSSH_AGENT_CTX* agent,
         ato32(buf + begin, &payloadSz);
         WLOG(WS_LOG_AGENT, "payloadSz = %u", payloadSz);
         begin += LENGTH_SZ;
-        if (payloadSz > len - begin) {
+        if (payloadSz == 0 || payloadSz > len - begin) {
             ret = WS_OVERFLOW_E;
         }
     }
