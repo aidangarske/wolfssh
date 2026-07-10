@@ -860,12 +860,14 @@ static int config_parse_command_line(struct config* config,
         config->command = command;
         cursor = command;
 
-        for (i = myoptind; i < argc; i++) {
-            cursor = stpcpy(cursor, argv[i]);
-            *cursor = ' ';
-            cursor++;
+        if (command != NULL) {
+            for (i = myoptind; i < argc; i++) {
+                cursor = stpcpy(cursor, argv[i]);
+                *cursor = ' ';
+                cursor++;
+            }
+            *(--cursor) = '\0';
         }
-        *(--cursor) = '\0';
         myoptind++;
     }
 
