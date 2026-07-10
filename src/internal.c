@@ -2794,6 +2794,8 @@ static int SetHostPrivateKey(WOLFSSH_CTX* ctx,
     }
 
     if (destIdx >= WOLFSSH_MAX_PVT_KEYS) {
+        ForceZero(der, derSz);
+        WFREE(der, ctx->heap, dynamicType);
         ret = WS_CTX_KEY_COUNT_E;
     }
     else {
